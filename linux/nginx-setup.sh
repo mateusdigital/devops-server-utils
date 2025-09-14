@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
+DOMAIN="${1:?Error: You must provide a domain (e.g. ./setup-nginx.sh mateus.digital)}"
+
 ## ---------------------------------------------------------
 ## Nginx + UFW setup script for Ubuntu
 ## Author: mateus.digital
 ## Date: 2025-08-26
 ## ---------------------------------------------------------
-
-## --- CONFIG ---
-DOMAIN="${1:?Error: You must provide a domain (e.g. ./setup-nginx.sh mateus.digital)}"
-WEBROOT="/var/www/$DOMAIN/html"
-NGINX_CONF="/etc/nginx/sites-available/$DOMAIN"
-
-echo "-------------------------------------------------"
-echo "--- Setting up Nginx for domain: ($DOMAIN) ---"
-echo "-------------------------------------------------"
+WEBROOT="/var/www/$DOMAIN/html";
+NGINX_CONF="/etc/nginx/sites-available/$DOMAIN";
 
 ## -----------------------------------------------------------------------------
 echo "Installing Nginx...";
@@ -78,15 +73,36 @@ fi
 
 ## -----------------------------------------------------------------------------
 echo "Testing Nginx config..."
-sudo nginx -t
+sudo nginx -t;
 
-echo "Restarting Nginx..."
-sudo systemctl reload nginx
+echo "Restarting Nginx...";
+sudo systemctl reload nginx;
 
 ## -----------------------------------------------------------------------------
-IP=$(curl -s icanhazip.com || echo "your-server-ip")
+IP=$(curl -s icanhazip.com || echo "your-server-ip");
 
-echo "-------------------------------------------------"
 echo "Setup complete!"
-echo "Visit your site at: http://$DOMAIN or http://$IP"
-echo "-------------------------------------------------"
+
+## ---------------------------------------------------------------------------##
+##                                                                            ##
+##   Certbot (Let's Encrypt) setup                                            ##
+##                                                                            ##
+## ---------------------------------------------------------------------------##
+
+echo "Installing Certbot (Let's Encrypt)...";
+sudo apt install -y certbot python3-certbot-nginx;
+
+echo "Requesting SSL certificate for $DOMAIN...";
+sudo certbot --nginx             \
+  -d "$DOMAIN" -d "www.$DOMAIN"  \
+  --non-interactive --agree-tos  \
+  -m "hello@mateus.digital"      \
+;
+
+## -----------------------------------------------------------------------------
+echo "Enabling auto-renewal..."
+sudo systemctl enable certbot.timer;
+sudo systemctl start certbot.timer;
+
+## -----------------------------------------------------------------------------
+echo "SSL setup complete!"
