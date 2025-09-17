@@ -18,3 +18,15 @@ sudo apt-get install --yes \
   wget                     \
   jq                       \
 ;
+
+
+sudo apt-get install --yes \
+  unzip                    \
+  nodejs                   \
+  npm                      \
+;
+
+
+sudo npm install -g \
+  live-server       \
+;
